@@ -1,0 +1,31 @@
+#download the zip file from the source and unzip it
+destFile="household_power_consumption.txt"
+
+if(!file.exists(destFile)){
+  zipFile = "household_power_consumption.zip";
+  download.file(paste("https://archive.ics.uci.edu/ml/machine-learning-databases/00235/", sep="", zipFile), zipFile)
+  unzip(zipFile)
+}
+#Note: You cannot skip lines and also read the header so we do it in two steps
+
+#read the header line from the file
+header <- read.table(destFile, sep=";", stringsAsFactors=FALSE, nrows=1)
+#read only the lines from 2-1-2007 through 2-2-2007 (2880 rows)
+power <- read.table(destFile, sep=";", na.strings="?", stringsAsFactors=FALSE, skip=66637, nrows=2880)
+#set the variable names
+colnames(power) <- unlist(header)
+
+#merge the Date and Time columns into a DateTime column
+power$Datetime <- strptime(paste(power$Date, sep=" ", power$Time), "%d/%m/%Y %H:%M:%S")
+
+#we joined Date and Time togeter as a DateTime so we can remove those columns
+power <- subset(power, select= -c(Date, Time))
+
+#create device
+png("plot2.png")
+
+#write plot to device
+plot(power$Datetime, power$Global_active_power, type="l", xlab="", ylab="Global Active Power (kilowatts)")
+
+#close device
+dev.off()
